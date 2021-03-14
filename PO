@@ -1,0 +1,303 @@
+
+#include <Servo.h>
+
+Servo servo1;
+Servo servo2;
+Servo servo3;
+Servo servo4;
+Servo servo5;
+int pos = 1; //модификатор стартовой позиции
+int test = 0; //модификатор последовательной смены позиций (1 - true ; 0 - false)
+int zaderzka = 1; //количество секунд между перерывами 
+int per = 0;
+int mod = 1;
+float voltage1;
+float voltage2;
+int border1 = 650;
+int border2 = 650;
+int bor_orig1 = 600;
+int bor_orig2 = 600;
+int manual = 0; // ручное управление (1) / нейроуправление (0)
+int position1;
+int position2;
+int position3;
+int position4;
+int position5;
+
+int AB1 = 0;
+int AB2 = 0;
+
+
+void setup() {
+    Serial.begin(9600);
+    pinMode(8, OUTPUT);   
+    pinMode(7 , INPUT);
+    pinMode(6 , INPUT); 
+    servo1.attach(9);
+    servo2.attach(10);
+    servo3.attach(11);
+    servo4.attach(12);
+    servo5.attach(13);
+    //1 - открытая ладонь
+    //2 - 2,3,4,5 пальци согнуты
+    //3 - указательный и большой согнуты
+    //4 - указательный палец указует вперед
+    //5 - роцк
+    //6 - чаек
+    //7 - сжатая рука
+}
+
+int logI = 0;
+void loop() {
+    position1 = servo1.read();
+    position2 = servo2.read();
+    position3 = servo3.read();
+    position4 = servo4.read();
+    position5 = servo5.read();
+
+    if (manual == 1) {
+        //1 - Открытая ладонь
+        if (pos == 1) {
+            if (position2 > position1 and position2 < 90) //условие открытие большого и среднего пальца
+            {
+                servo2.write(180);
+            } else {
+                servo1.write(175);
+                servo2.write(180);
+            }
+            servo3.write(160);
+            servo4.write(150);
+            servo5.write(140);
+        }
+
+        //2 - 2,3,4,5 пальци согнуты
+        if (pos == 2) {
+            servo1.write(175);
+            servo2.write(20);
+            servo3.write(0);
+            servo4.write(0);
+            servo5.write(5);
+        }
+
+        //3 - Указательный и большой согнуты
+        if (pos == 3) {
+            servo1.write(69);
+            servo2.write(70);
+            servo3.write(160);
+            servo4.write(150);
+            servo5.write(135);
+        }
+
+        //4 - указательный палец указует вперед
+        if (pos == 4) {
+            servo1.write(90);
+            servo2.write(150);
+            servo3.write(0);
+            servo4.write(0);
+            servo5.write(5);
+        }
+
+        //5 - роцк
+        if (pos == 5) {
+            servo1.write(50);
+            servo2.write(180);
+            servo3.write(0);
+            servo4.write(10);
+            servo5.write(140);
+        }
+
+        //6 - чаек
+        if (pos == 6) {
+            servo1.write(69);
+            servo2.write(70);
+            servo3.write(48);
+            servo4.write(65);
+            servo5.write(140);
+        }
+
+        //7 - сжатая рука
+        if (pos == 7 ) {
+        servo1.write(69);
+        servo2.write(70);
+        servo3.write(0);
+        servo4.write(0);
+        servo5.write(5);
+        }
+
+        //последовательная смена позиций
+        if (test == 1) {
+            pos = (pos % 7) + 1;
+            delay(1000 * zaderzka);
+        }
+    }
+
+    if (manual == 0) {
+        voltage1 = analogRead(A0);
+        voltage2 = analogRead(A1);
+
+      /*  AB1 = digitalRead(7);
+        Serial.println(AB1);
+        AB2 = digitalRead(6);
+        Serial.println(AB2);*/
+
+        if (logI % 10 == 0) {
+          Serial.print(AB1);
+          Serial.print("  ");
+          Serial.println(AB2);
+        
+        }
+        logI++;
+     
+     /*   if (AB1 == 1)
+        {voltage1 = 900;}
+        if (AB1 == 0)
+        {voltage1 = 0;} 
+
+        if (AB2 == 1)
+        {voltage2 = 900;}
+        if (AB2 == 0)
+        {voltage2 = 0;}*/
+
+        if (voltage1 > border1)
+        {AB1 = 1;}
+        if (voltage1 < border1)
+        {AB1 = 0;} 
+
+        if (voltage2 > border2)
+        {AB2 = 1;}
+       if (voltage2 < border2)
+        {AB2 = 0;} 
+
+        if (AB1 == 1 and AB2 == 0 and (mod == 1 or mod == 4))
+        {
+        pos = 7;
+        mod = 2;
+        AB1 == 0 and AB2 == 0;
+        delay(250);
+        }
+        
+        if (AB1 == 0 and AB2 == 1 and (mod == 1 or mod == 4) )
+        {
+        pos = 4;
+        mod = 3;
+         AB1 == 0 and AB2 == 0;
+        delay(250);
+        }
+        
+            if (AB1 == 1 and AB2 == 0 and mod == 3)
+            {
+            pos = 1;
+            mod = 1;
+             AB1 == 0 and AB2 == 0;
+            delay(250);
+            }
+            
+             if (AB1 == 0 and AB2 == 1 and mod == 2)
+            {
+            pos = 1; 
+            mod = 1;
+             AB1 == 0 and AB2 == 0;
+            delay(250);
+            }
+
+            if (AB1 == 1 and AB2 == 1 )
+            {
+            pos = 5;
+            mod = 4;
+             AB1 == 0 and AB2 == 0;
+            delay(300);
+            }
+
+
+/*       if (voltage1 > border1 and voltage2 < border2 and mod == 1)
+        {
+        pos = 7;
+        mod = 2;
+        }
+        
+
+        if (mod == 2)
+        {
+            if (voltage1 < border1 and voltage2 > border2)
+            {
+            pos = 1; mod = 1;
+            }
+
+        }
+*/
+
+
+        //1 - Открытая ладонь
+        if (pos == 1) {
+       
+            servo1.write(175);
+            servo2.write(180);        
+            servo3.write(160);
+            servo4.write(150);
+            servo5.write(140);
+        }
+        //4 - указательный палец указует вперед
+        if (pos == 4) {
+            servo1.write(90);
+            servo2.write(150);
+            servo3.write(0);
+            servo4.write(0);
+            servo5.write(5);
+        }
+
+        //3 - Указательный и большой согнуты
+        if (pos == 3) {
+            servo1.write(90);
+            servo2.write(150);
+            servo3.write(0);
+            servo4.write(0);
+            servo5.write(5);
+        }
+
+        //5 - роцк
+        if (pos == 5) {
+            servo1.write(50);
+            servo2.write(180);
+            servo3.write(0);
+            servo4.write(10);
+            servo5.write(140);
+        }
+
+         //6 - чаек
+        if (pos == 6) {
+            servo1.write(69);
+            servo2.write(70);
+            servo3.write(48);
+            servo4.write(65);
+            servo5.write(140);
+        }
+
+
+        //7 - сжатая рука
+        if (pos == 7 ) {
+        servo1.write(69);
+        servo2.write(70);
+        servo3.write(0);
+        servo4.write(0);
+        servo5.write(5);
+        }
+
+
+    }
+
+    
+        if (per>400)
+    {
+     digitalWrite(8, HIGH);  
+     delay(50);  
+     digitalWrite(8, LOW);    
+     per = 0;     
+    }
+
+     per = per + 1;
+     delay(10);
+    
+    }
+    
+
+
